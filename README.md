@@ -3,10 +3,10 @@
 Análise da precisão de métodos de análise de sentimentos para estimar o grau de insatisfação nas reclamações recebidas pelos órgãos do Gov Federal via ReclameAqui.
 
 ## Grupo:
-Anderson Dalbert
-Luan Rocha
-Lucas Christopher
-Thalys Menezes
+- Anderson Dalbert
+- Luan Rocha
+- Lucas Christopher
+- Thalys Menezes
 
 ## O projeto
 
