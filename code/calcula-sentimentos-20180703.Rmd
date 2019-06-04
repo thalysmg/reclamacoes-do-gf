@@ -3,7 +3,7 @@ title: "Analisa sentimentos das reclamacoes"
 output: html_notebook
 ---
 
-```{r warning=FALSE}
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 library(tidyverse)
 library(tidytext)
 library(here)
@@ -12,7 +12,9 @@ theme_set(theme_bw())
 ```
 
 ```{r carrega}
-reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20181113.csv"))
+
+## 1 PASSO: Mudamos o arquivo a ser lido...
+reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
 
 #reclamacoes = reclamacoes_raw %>% 
 #    mutate(
@@ -39,9 +41,10 @@ glimpse(op30)
 Precisamos de um dataframe onde cada observacao eh uma palavra. 
 
 ```{r separa}
+## 2 PASSO: Mudamos a coluna a ser lida, de "reclamacoes" para "texto"...
 palavra_a_palavra = reclamacoes %>% 
-    select(id, reclamacao) %>% 
-    unnest_tokens(termo, reclamacao)
+    select(id, texto) %>% 
+    unnest_tokens(termo, texto)
 
 palavra_a_palavra %>%
   select(id, termo) %>%
@@ -63,6 +66,7 @@ sentimentos = palavras_com_sentimento %>%
               palavras_sent = sum(!is.na(sent)), 
               palavras = n())
 
+## 3 PASSO: Adicionamos uma pasta para colocar os sentimentos calculados...
 sentimentos %>% 
     write_csv(here("data/5-sentimentos/sentimento.csv"))
 ```
