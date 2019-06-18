@@ -41,17 +41,27 @@ reclamacoes_l %>% View()
 Converte polaridades para escala 0-5
 
 ```{r}
-# Faça você mesmo. Crie a variável polaridade_normalizada
-# reclamacoes_l = reclamacoes_l %>% 
-#     group_by(lexico) %>% 
-#     mutate(polaridade_normalizada = ALGOAQUI)
+calcula_polaridade <- function(polaridade) {
+    polaridade_aux <- (polaridade - min(polaridade)) / (max(polaridade) - min(polaridade))
+    
+    polaridade <- 1 - polaridade_aux
+    #print(polaridade)
+    
+    return(if_else(polaridade <= 0.2, 1,
+                   if_else(polaridade <= 0.4, 2, 
+                           if_else(polaridade <= 0.6, 3,
+                                   if_else(polaridade <= 0.8, 4, 5)))))
+    
+}
 ```
 
 Calcula o erro (SSE) por reclamação
 
 ```{r}
-reclamacoes_l = reclamacoes_l %>% 
-    mutate(erro = (insatisfacao - polaridade_normalizada)**2)
+reclamacoes_l = reclamacoes_l %>% group_by(lexico) %>% mutate(polaridade_normalizada = calcula_polaridade(polaridade))
+
+reclamacoesFiltradas = reclamacoes_l %>% select(ID = id, Polaridade = polaridade, Polaridade_Normalizada = polaridade_normalizada, 
+                                                Comprimento = comprimento_reclamacao, Palavras = palavras, Lexico = lexico, Erro = erro)
 ```
 
 
