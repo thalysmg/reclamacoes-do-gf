@@ -8,17 +8,14 @@ library(tidyverse)
 library(here)
 library(modelr)
 library(broom)
-
 theme_set(theme_bw())
 ```
 
 ## Os dados
 
 ```{r carrega}
-
 reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
 sentimentos = read_csv(here("data/5-sentimentos/sentimento.csv"))
-
 reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(texto))
 ```
 
@@ -27,15 +24,12 @@ reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(texto))
 ```{r junta}
 reclamacoes = reclamacoes %>% 
     left_join(sentimentos, by = "id")
-
 reclamacoes_l = reclamacoes %>%  
-    select(-palavras_op30, -palavras_sent, -grupo_avaliando) %>% 
+    select(-palavras_op30, -palavras_sent, -`Grupo que vai avaliar`) %>% 
     gather(key = "lexico", 
            value = "polaridade", 
            sentimento_op30, sentimento_sent)
-
 reclamacoes_l %>% View()
-
 ```
 
 Converte polaridades para escala 0-5
@@ -50,18 +44,47 @@ calcula_polaridade <- function(polaridade) {
     return(if_else(polaridade <= 0.2, 1,
                    if_else(polaridade <= 0.4, 2, 
                            if_else(polaridade <= 0.6, 3,
-                                   if_else(polaridade <= 0.8, 4, 5)))))
+                                   if_else(polaridade <= 0.8, 4)
+                                        if_else(polaridade <= 1, 5)))))
     
 }
+reclamacoes_l = reclamacoes_l %>% group_by(lexico) %>% mutate(polaridade_normalizada = calcula_polaridade(polaridade))
+reclamacoesFiltradas = reclamacoes_l %>% select(ID = id, Polaridade = polaridade, Polaridade_Normalizada = polaridade_normalizada, Comprimento = comprimento_reclamacao, Palavras = palavras, Lexico = lexico, Erro = erro)
+```
+Gerando o gráfico de barras separadamente para cada Léxico:
+
+```{r}
+reclamacoesLexicoSent = reclamacoesFiltradas %>% filter(Lexico == 'sentimento_sent')
+reclamacoesLexicoOp30 = reclamacoesFiltradas %>% filter(Lexico == 'sentimento_op30')
+reclamacoesLexicoSent = reclamacoesLexicoSent[order(reclamacoesLexicoSent$ID),]
+reclamacoesLexicoOp30 = reclamacoesLexicoOp30[order(reclamacoesLexicoOp30$ID),]
+barplot(reclamacoesLexicoSent$Polaridade_Normalizada, main="Nível de insatisfação (Léxico Sent)", xlab=reclamacoesLexicoSent$ID, names.arg = reclamacoesLexicoSent$ID)
+barplot(reclamacoesLexicoOp30$Polaridade_Normalizada, main="Nível de insatisfação (Léxico Op30)", xlab=reclamacoesLexicoOp30$ID, names.arg = reclamacoesLexicoOp30$ID)
+```
+Gerando um gráfico de dispersão para avaliar a correlação entre a quantidade de palavras na reclamacao e a insatisfação. Percebemos que é muito pequena (próximo a zero), o que nos leva a acreditar que não existe correlação entre elas. 
+
+```{r}
+panel.cor <- function ( x , y , digits= 2 , prefix= "" , cex.cor , ... )
+{
+  usr <- par ( "usr" ) ;  on.exit ( par ( usr ) )
+  par ( usr = c ( 0 , 1 , 0 , 1 ) )
+  r <- abs ( cor ( x , y ) )
+  txt <- format ( c ( r , 0.123456789 ) , digits=digits ) [ 1 ]
+  txt <- paste ( prefix , txt , sep= "" )
+  if ( missing ( cex.cor ) ) cex.cor <- 0.8 /strwidth ( txt )
+  text ( 0.5 , 0.5 , txt , cex = cex.cor * r )
+}
+cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,reclamacoesLexicoSent$Palavras,method="pearson", exact=T)
+pairs (reclamacoesLexicoSent[3:4],lower.panel= panel.smooth , upper.panel=panel.cor , pch= 20 , main= "Existe Relação? (Léxico Sent)" )
+cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,reclamacoesLexicoSent$Palavras,method="pearson", exact=T)
+pairs (reclamacoesLexicoOp30[3:4],lower.panel= panel.smooth , upper.panel=panel.cor , pch= 20 , main= "Existe Relação? (Léxico Op30)" )
 ```
 
 Calcula o erro (SSE) por reclamação
 
 ```{r}
-reclamacoes_l = reclamacoes_l %>% group_by(lexico) %>% mutate(polaridade_normalizada = calcula_polaridade(polaridade))
-
-reclamacoesFiltradas = reclamacoes_l %>% select(ID = id, Polaridade = polaridade, Polaridade_Normalizada = polaridade_normalizada, 
-                                                Comprimento = comprimento_reclamacao, Palavras = palavras, Lexico = lexico, Erro = erro)
+reclamacoes_l = reclamacoes_l %>% 
+    mutate(erro = (insatisfacao - polaridade_normalizada)**2)
 ```
 
 
@@ -85,30 +108,8 @@ reclamacoes_l %>%
     geom_abline(slope = 1, intercept = 0, color = "grey") + 
     geom_jitter(alpha = .7)  + 
     facet_wrap(~ lexico)
-
 reclamacoes_l %>% 
     ggplot(aes(x = insatisfacao, y = erro, group = insatisfacao)) + 
     geom_jitter(alpha = .5)  +
     # geom_boxplot() + 
     facet_wrap(~ lexico)
-```
-
-
-## Há relação entre o léxico e o erro?
-
-Agora um modelo para responder sua pergunta.
-
-```{r}
-#Cria variável dummy para preditor categórico
-reclamacoes_l = reclamacoes_l %>% mutate(lexico.dummy = if_else(lexico == "sentimento_sent", 1, 0))
-#Você precisa entender o que fez acima para interpretar sua regressão
-#Você pode também criar uma variável dummy para o órgao (se anac ou inss)
-
-# ggpairs(reclamacoes_l %>% select(<selecione as colulas que vc quer usar aqui>))
-# lm1 = lm(<seu modelo>)
-```
-
-**Dica** - o texto de resultado que queremos produzir é algo como: 
-
-**Regressão múltipla foi utilizada para analisar se VarIndep1 e VarIndep2 tem uma associação significativa com o erro na estimativa de instatisfação da reclemação. Os resultados da regressão indicam que um modelo com os 2 preditores no formato Erro = XXX.VarIndep1 + YYY.VarIndep2 explicam XX,XX% da variância da variável de resposta (R2 = XX,XX). VarIndep1, medida como/em [unidade ou o que é o 0 e o que é 1] tem uma relação significativa com o erro (b = [yy,yy;  zz,zz], IC com 95%), assim como VarIndep2 medida como [unidade ou o que é o 0 e o que é 1] (b = [yy,yy;  zz,zz], IC com 95%). O aumento de 1 unidade de VarIndep1 produz uma mudança de...**
-
