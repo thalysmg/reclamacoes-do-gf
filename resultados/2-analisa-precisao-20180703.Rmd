@@ -61,8 +61,18 @@ reclamacoesLexicoOp30 = reclamacoesLexicoOp30[order(reclamacoesLexicoOp30$ID),]
 # Barplot do nível de insatisfação referente a cada dicionário
 # Representação: ID da reclamação x Polaridade normalizada
 
-barplot(reclamacoesLexicoSent$Polaridade_Normalizada, main="Nível de insatisfação (Léxico Sent)", xlab=reclamacoesLexicoSent$ID, names.arg = reclamacoesLexicoSent$ID)
-barplot(reclamacoesLexicoOp30$Polaridade_Normalizada, main="Nível de insatisfação (Léxico Op30)", xlab=reclamacoesLexicoOp30$ID, names.arg = reclamacoesLexicoOp30$ID)
+barplot(reclamacoesLexicoSent$Polaridade_Normalizada, 
+        main="Nível de insatisfação (Léxico Sent)",
+        xlab=reclamacoesLexicoSent$ID, 
+        names.arg = reclamacoesLexicoSent$ID
+)
+
+barplot(reclamacoesLexicoOp30$Polaridade_Normalizada,
+        main="Nível de insatisfação (Léxico Op30)",
+        xlab=reclamacoesLexicoOp30$ID,
+        names.arg = reclamacoesLexicoOp30$ID
+
+)
 
 ```
 
@@ -85,19 +95,19 @@ boxplot(reclamacoesLexicoSent$Polaridade_Normalizada,
 Gráficos de dispersão (Sentis x Av. Humana e Op30 x Avaliação humana)
 
 ```{r}
-plot(jitter(reclamacoesLexicoSent$Polaridade), jitter(reclamacoesLexicoSent$Insatisfação),
+plot(jitter(reclamacoesLexicoSent$Polaridade_Normalizada), jitter(reclamacoesLexicoSent$Insatisfação),
   ylab = "Insatisfação",
-  xlab = "Somatório da polaridade para o comentário",
+  xlab = "Polaridade normalizada",
   col="blue",
-  main = "Gráficos de dispersão (Sentis x Av. Humana)",
+  main = "Gráfico de dispersão (Sentis x Av. Humana)",
   pch=20
 )
 
-plot(jitter(reclamacoesLexicoOp30$Polaridade), jitter(reclamacoesLexicoOp30$Insatisfação),
+plot(jitter(reclamacoesLexicoOp30$Polaridade_Normalizada), jitter(reclamacoesLexicoOp30$Insatisfação),
   ylab = "Insatisfação",
-  xlab = "Somatório da polaridade para o comentário",
+  xlab = "Polaridade normalizada",
   col="red",
-  main = "Gráficos de dispersão (Sentis x Av. Humana)",
+  main = "Gráfico de dispersão (Op30 x Av. Humana)",
   pch=20
 )
 
@@ -116,10 +126,36 @@ panel.cor <- function ( x , y , digits= 2 , prefix= "" , cex.cor , ... )
   if ( missing ( cex.cor ) ) cex.cor <- 0.8 /strwidth ( txt )
   text ( 0.5 , 0.5 , txt , cex = cex.cor * r )
 }
+cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,
+         reclamacoesLexicoSent$Palavras,
+         method="pearson",
+         exact=T
+)
+pairs (reclamacoesLexicoSent[3:4],
+       lower.panel = panel.smooth,
+       upper.panel = panel.cor,
+       pch = 20,
+       main = "Existe Relação? (Léxico Sent)" 
+)
+
+cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,
+         reclamacoesLexicoSent$Palavras,
+         method="pearson",
+         exact=T
+)
+
+pairs (reclamacoesLexicoOp30[3:4],
+       lower.panel = panel.smooth,
+       upper.panel = panel.cor,
+       pch = 20,
+       main = "Existe Relação? (Léxico Op30)"
+)
+
 cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,reclamacoesLexicoSent$Palavras,method="pearson", exact=T)
 pairs (reclamacoesLexicoSent[3:4],lower.panel= panel.smooth , upper.panel=panel.cor , pch= 20 , main= "Existe Relação? (Léxico Sent)" )
 cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,reclamacoesLexicoSent$Palavras,method="pearson", exact=T)
 pairs (reclamacoesLexicoOp30[3:4],lower.panel= panel.smooth , upper.panel=panel.cor , pch= 20 , main= "Existe Relação? (Léxico Op30)" )
+
 ```
 
 Calcula o erro (SSE) por reclamação
