@@ -19,7 +19,7 @@ sentimentos = read_csv(here("data/5-sentimentos/sentimento.csv"))
 reclamacoes = reclamacoes %>% mutate(comprimento_reclamacao = str_length(texto))
 ```
 
-`reclamacoes_l` tem um formato long em vez de wide (explicado [aqui](https://sejdemyr.github.io/r-tutorials/basics/wide-and-long/)).
+# Filtrando tabelas auxiliares
 
 ```{r junta}
 reclamacoes = reclamacoes %>% 
@@ -31,7 +31,7 @@ reclamacoes_l = reclamacoes %>%
            sentimento_op30, sentimento_sent)
 ```
 
-Converte polaridades para escala 0-5
+# Converte polaridades para escala 0-5
 
 ```{r}
 calcula_polaridade <- function(polaridade) {
@@ -46,19 +46,20 @@ calcula_polaridade <- function(polaridade) {
 reclamacoes_l = reclamacoes_l %>% group_by(lexico) %>% mutate(polaridade_normalizada = calcula_polaridade(polaridade))
 ```
 
-Calcula o erro (SSE) por reclamação
+# Calcula o erro (SSE) por reclamação
 
 ```{r}
 reclamacoes_l = reclamacoes_l %>% 
     mutate(erro = (insatisfacao - polaridade_normalizada)**2)
 ```
 
+# Criando uma tabela auxiliar com os erros em cada reclamação, filtrando por léxico
 
 ```{r}
 reclamacoesFiltradas = reclamacoes_l %>% select(ID = id, Insatisfação = insatisfacao, Polaridade = polaridade, Polaridade_Normalizada = polaridade_normalizada, Palavras = palavras, Comprimento = comprimento_reclamacao, Lexico = lexico, Erro = erro)
 ```
 
-Gerando o gráfico de barras separadamente para cada Léxico:
+# Gerando o gráfico de barras separadamente para cada léxico
 
 ```{r}
 reclamacoesLexicoSent = reclamacoesFiltradas %>% filter(Lexico == 'sentimento_sent')
@@ -84,7 +85,7 @@ barplot(reclamacoesLexicoOp30$Polaridade_Normalizada,
 
 ```
 
-Calculando o erro médio quadrático para cada dicionário
+# Calculando o erro médio quadrático para cada dicionário
 
 ```{r}
 # Erro médio Op30 = 2.124
@@ -93,8 +94,8 @@ erro_medio_op30 = sum(reclamacoesLexicoOp30$Erro) / length(reclamacoesLexicoOp30
 erro_medio_sent = sum(reclamacoesLexicoSent$Erro) / length(reclamacoesLexicoSent$Erro)
 ```
 
-Verificando a correlação entre "a porcentagem de palavras encontradas em cada reclamação
-pelos dicionários" e "o erro por reclamação". 
+# Verificando a correlação entre "a porcentagem de palavras encontradas em cada reclamação
+# pelos dicionários" e "o erro por reclamação". 
 
 ```{r}
 # Tabela de reclamações ordenada por ID, para facilitar filtragem
@@ -105,7 +106,7 @@ porc_op30 = tab_aux$palavras_op30 / tab_aux$palavras
 porc_sents = tab_aux$palavras_sent / tab_aux$palavras
 ```
 
-Calculando a correlação
+# Calculando a correlação
 
 ```{r}
 # Correlação da porcentagem de palavras encontradas pelo 0p30 e o erro = 0.1808979
@@ -114,7 +115,7 @@ cor_erro_op30 = cor(porc_op30, reclamacoesLexicoOp30$Erro)
 cor_erro_sents = cor(porc_sents, reclamacoesLexicoSent$Erro)
 ```
 
-Boxplot referente aos dicionários léxicos
+# Boxplot referente aos dicionários léxicos
 
 ```{r}
 boxplot(reclamacoes$insatisfacao,
@@ -138,7 +139,7 @@ boxplot(reclamacoesLexicoSent$Polaridade_Normalizada,
 
 ```
 
-Gráficos de dispersão (Sentis x Av. Humana e Op30 x Avaliação humana)
+# Gráficos de dispersão (Sentis x Av. Humana e Op30 x Avaliação humana)
 
 ```{r}
 plot(jitter(reclamacoesLexicoSent$Polaridade_Normalizada), jitter(reclamacoesLexicoSent$Insatisfação),
@@ -159,7 +160,9 @@ plot(jitter(reclamacoesLexicoOp30$Polaridade_Normalizada), jitter(reclamacoesLex
 
 ```
 
-Gerando um gráfico de dispersão para avaliar a correlação entre a quantidade de palavras na reclamacao e a insatisfação. Percebemos que é muito pequena (próximo a zero), o que nos leva a acreditar que não existe correlação entre elas. 
+# Gerando um gráfico de dispersão para avaliar a correlação entre a quantidade de palavras na
+# reclamacao e a insatisfação. Percebemos que é muito pequena (próximo a zero), o que nos leva
+# a acreditar que não existe correlação entre elas. 
 
 ```{r}
 panel.cor <- function ( x , y , digits= 2 , prefix= "" , cex.cor , ... )
@@ -202,10 +205,10 @@ pairs (reclamacoesLexicoOp30[4:5],
 
 ## EDA
 
-Inicial. Faça os gráficos a mais que achar necessário para entender os dados que temos de resultado. Lembrando de nossa questão: Quão eficazes são os métodos de análise de sentimento baseados em léxicos para estimar o nível de insatisfação de reclamações recebidas pelo reclameaqui do governo federal? Existe um exemplo de EDA no repositório. Uma decisão importante a ser usada é se vamos considerar as avaliações humanas onde houve muita discordância sobre o nível de insatisfação.
+# Inicial. Faça os gráficos a mais que achar necessário para entender os dados que temos de resultado. Lembrando de nossa questão: Quão eficazes são os métodos de análise de sentimento baseados em léxicos para estimar o nível de insatisfação de reclamações recebidas pelo reclameaqui do governo federal? Existe um exemplo de EDA no repositório. Uma decisão importante a ser usada é se vamos considerar as avaliações humanas onde houve muita discordância sobre o nível de insatisfação.
 
 ### Como avaliar a eficácia dos métodos?  
-Uma medida interessante da eficiência desses métodos é calcular a soma dos erros ao quadrado (SSE) considerando o que o método definiu como a polaridade_normalizada e o que a avaliação humana definiu como a insatisfação.
+# Uma medida interessante da eficiência desses métodos é calcular a soma dos erros ao quadrado (SSE) considerando o que o método definiu como a polaridade_normalizada e o que a avaliação humana definiu como a insatisfação.
 
 ```{r}
 reclamacoes %>% 
@@ -234,9 +237,43 @@ reclamacoes_l %>%
 
 ```
 
+# Calculando a Regressão Linear Múltipla entre Av. humana (v. resposta) e polaridades normalizadas de ambos os léxicos,  (v. explicativas)
+
+```{r}
+aval_humana = tab_aux$insatisfacao
+pol_norm_op30 = reclamacoesLexicoOp30$Polaridade_Normalizada
+pol_norm_sents = reclamacoesLexicoSent$Polaridade_Normalizada
+
+regressao = lm(aval_humana ~ 
+                 pol_norm_op30 +
+                 pol_norm_sents
+)
+summary(regressao)
+
+# Saída do Summary
+# Call:
+# lm(formula = aval_humana ~ pol_norm_op30 + pol_norm_sents)
+#
+# Residuals:
+#     Min      1Q  Median      3Q     Max 
+# -1.9216 -0.7090 -0.1284  0.8225  2.3011 
+#
+# Coefficients:
+#               Estimate Std. Error t value Pr(>|t|)  
+# (Intercept)      1.3183     0.6357   2.074   0.0426 *
+# pol_norm_op30    0.2254     0.2171   1.038   0.3037  
+# pol_norm_sents   0.1725     0.2025   0.852   0.3980  
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#
+# Residual standard error: 1.107 on 57 degrees of freedom
+# Multiple R-squared:  0.07416,	Adjusted R-squared:  0.04167 
+# F-statistic: 2.283 on 2 and 57 DF,  p-value: 0.1113
+```
+
 ## Há relação entre o léxico e o erro?
 
-Agora um modelo para responder sua pergunta.
+# Agora um modelo para responder sua pergunta.
 
 ```{r}
 #Cria variável dummy para preditor categórico
@@ -247,6 +284,6 @@ reclamacoes_l = reclamacoes_l %>% mutate(lexico.dummy = if_else(lexico == "senti
 # lm1 = lm(<seu modelo>)
 ```
 
-**Dica** - o texto de resultado que queremos produzir é algo como: 
+# **Dica** - o texto de resultado que queremos produzir é algo como: 
 
-Regressão múltipla foi utilizada para analisar se VarIndep1 e VarIndep2 tem uma associação significativa com o erro na estimativa de instatisfação da reclemação. Os resultados da regressão indicam que um modelo com os 2 preditores no formato Erro = XXX.VarIndep1 + YYY.VarIndep2 explicam XX,XX% da variância da variável de resposta (R2 = XX,XX). VarIndep1, medida como/em [unidade ou o que é o 0 e o que é 1] tem uma relação significativa com o erro (b = [yy,yy;  zz,zz], IC com 95%), assim como VarIndep2 medida como [unidade ou o que é o 0 e o que é 1] (b = [yy,yy;  zz,zz], IC com 95%). O aumento de 1 unidade de VarIndep1 produz uma mudança de...
+# Regressão múltipla foi utilizada para analisar se VarIndep1 e VarIndep2 tem uma associação significativa com o erro na estimativa de instatisfação da reclemação. Os resultados da regressão indicam que um modelo com os 2 preditores no formato Erro = XXX.VarIndep1 + YYY.VarIndep2 explicam XX,XX% da variância da variável de resposta (R2 = XX,XX). VarIndep1, medida como/em [unidade ou o que é o 0 e o que é 1] tem uma relação significativa com o erro (b = [yy,yy;  zz,zz], IC com 95%), assim como VarIndep2 medida como [unidade ou o que é o 0 e o que é 1] (b = [yy,yy;  zz,zz], IC com 95%). O aumento de 1 unidade de VarIndep1 produz uma mudança de...
