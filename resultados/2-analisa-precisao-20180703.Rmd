@@ -11,7 +11,7 @@ library(broom)
 theme_set(theme_bw())
 ```
 
-## Os dados
+# Os dados
 
 ```{r carrega}
 reclamacoes = read_csv(here("data/3-avaliacao-humana/reclamacoes-avaliadas-20190515.csv"))
@@ -40,14 +40,22 @@ calcula_polaridade <- function(polaridade) {
     polaridade <- 1 - polaridade_aux
     #print(polaridade)
     
-    return(if_else(polaridade <= 0.2, 1,
-                   if_else(polaridade <= 0.4, 2, 
-                           if_else(polaridade <= 0.6, 3,
-                                   if_else(polaridade <= 0.8, 4, 5)))))
+    return(polaridade * 5)
     
 }
 reclamacoes_l = reclamacoes_l %>% group_by(lexico) %>% mutate(polaridade_normalizada = calcula_polaridade(polaridade))
-reclamacoesFiltradas = reclamacoes_l %>% select(ID = id, Insatisfação = insatisfacao, Polaridade = polaridade, Polaridade_Normalizada = polaridade_normalizada, Comprimento = comprimento_reclamacao, Palavras = palavras, Lexico = lexico, Erro = erro)
+```
+
+Calcula o erro (SSE) por reclamação
+
+```{r}
+reclamacoes_l = reclamacoes_l %>% 
+    mutate(erro = (insatisfacao - polaridade_normalizada)**2)
+```
+
+
+```{r}
+reclamacoesFiltradas = reclamacoes_l %>% select(ID = id, Insatisfação = insatisfacao, Polaridade = polaridade, Polaridade_Normalizada = polaridade_normalizada, Palavras = palavras, Comprimento = comprimento_reclamacao, Lexico = lexico, Erro = erro)
 ```
 
 Gerando o gráfico de barras separadamente para cada Léxico:
@@ -76,9 +84,47 @@ barplot(reclamacoesLexicoOp30$Polaridade_Normalizada,
 
 ```
 
+Calculando o erro médio quadrático para cada dicionário
+
+```{r}
+# Erro médio Op30 = 2.124
+erro_medio_op30 = sum(reclamacoesLexicoOp30$Erro) / length(reclamacoesLexicoOp30$Erro)
+# Erro médio Sents = 1.823
+erro_medio_sent = sum(reclamacoesLexicoSent$Erro) / length(reclamacoesLexicoSent$Erro)
+```
+
+Verificando a correlação entre "a porcentagem de palavras encontradas em cada reclamação
+pelos dicionários" e "o erro por reclamação". 
+
+```{r}
+# Tabela de reclamações ordenada por ID, para facilitar filtragem
+tab_aux = reclamacoes
+tab_aux = tab_aux[order(tab_aux$id),]
+
+porc_op30 = tab_aux$palavras_op30 / tab_aux$palavras
+porc_sents = tab_aux$palavras_sent / tab_aux$palavras
+```
+
+Calculando a correlação
+
+```{r}
+# Correlação da porcentagem de palavras encontradas pelo 0p30 e o erro = 0.1808979
+cor_erro_op30 = cor(porc_op30, reclamacoesLexicoOp30$Erro)
+# Correlação da porcentagem de palavras encontradas pelo Sentis e o erro = 0.1873026
+cor_erro_sents = cor(porc_sents, reclamacoesLexicoSent$Erro)
+```
+
 Boxplot referente aos dicionários léxicos
 
 ```{r}
+boxplot(reclamacoes$insatisfacao,
+  main = "Boxplot referente ao Grau de Insatisfação",
+  xlab = "Grau de insatisfação",
+  border = "brown",
+  horizontal = TRUE,
+  notch = FALSE
+)
+
 boxplot(reclamacoesLexicoSent$Polaridade_Normalizada,
         reclamacoesLexicoOp30$Polaridade_Normalizada,
   main = "Boxplot referente aos Dicionário Léxicos",
@@ -98,17 +144,17 @@ Gráficos de dispersão (Sentis x Av. Humana e Op30 x Avaliação humana)
 plot(jitter(reclamacoesLexicoSent$Polaridade_Normalizada), jitter(reclamacoesLexicoSent$Insatisfação),
   ylab = "Insatisfação",
   xlab = "Polaridade normalizada",
-  col="blue",
+  col = "blue",
   main = "Gráfico de dispersão (Sentis x Av. Humana)",
-  pch=20
+  pch = 20
 )
 
 plot(jitter(reclamacoesLexicoOp30$Polaridade_Normalizada), jitter(reclamacoesLexicoOp30$Insatisfação),
   ylab = "Insatisfação",
   xlab = "Polaridade normalizada",
-  col="red",
+  col = "red",
   main = "Gráfico de dispersão (Op30 x Av. Humana)",
-  pch=20
+  pch = 20
 )
 
 ```
@@ -128,41 +174,30 @@ panel.cor <- function ( x , y , digits= 2 , prefix= "" , cex.cor , ... )
 }
 cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,
          reclamacoesLexicoSent$Palavras,
-         method="pearson",
-         exact=T
+         #method="pearson",
+         exact = TRUE
 )
-pairs (reclamacoesLexicoSent[3:4],
+
+pairs (reclamacoesLexicoSent[4:5],
        lower.panel = panel.smooth,
        upper.panel = panel.cor,
        pch = 20,
        main = "Existe Relação? (Léxico Sent)" 
 )
 
-cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,
-         reclamacoesLexicoSent$Palavras,
-         method="pearson",
-         exact=T
+cor.test(reclamacoesLexicoOp30$Polaridade_Normalizada,
+         reclamacoesLexicoOp30$Palavras,
+         #method="pearson",
+         exact = TRUE
 )
 
-pairs (reclamacoesLexicoOp30[3:4],
+pairs (reclamacoesLexicoOp30[4:5],
        lower.panel = panel.smooth,
        upper.panel = panel.cor,
        pch = 20,
        main = "Existe Relação? (Léxico Op30)"
 )
 
-cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,reclamacoesLexicoSent$Palavras,method="pearson", exact=T)
-pairs (reclamacoesLexicoSent[3:4],lower.panel= panel.smooth , upper.panel=panel.cor , pch= 20 , main= "Existe Relação? (Léxico Sent)" )
-cor.test(reclamacoesLexicoSent$Polaridade_Normalizada,reclamacoesLexicoSent$Palavras,method="pearson", exact=T)
-pairs (reclamacoesLexicoOp30[3:4],lower.panel= panel.smooth , upper.panel=panel.cor , pch= 20 , main= "Existe Relação? (Léxico Op30)" )
-
-```
-
-Calcula o erro (SSE) por reclamação
-
-```{r}
-reclamacoes_l = reclamacoes_l %>% 
-    mutate(erro = (insatisfacao - polaridade_normalizada)**2)
 ```
 
 ## EDA
