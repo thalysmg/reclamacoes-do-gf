@@ -173,6 +173,24 @@ reg_op30 = lm(erro_op30~porc_op30)
 #     0.9936       9.5684
 abline(reg_op30)
 
+summary(reg_op30)
+
+# Call:
+# lm(formula = erro_op30 ~ porc_op30)
+# 
+# Residuals:
+#     Min      1Q  Median      3Q     Max 
+# -2.7147 -1.6382 -0.8212  1.2472  7.7052 
+# 
+# Coefficients:
+#             Estimate Std. Error t value Pr(>|t|)
+# (Intercept)   0.9936     0.8625   1.152    0.254
+# porc_op30     9.5684     6.8307   1.401    0.167
+# 
+# Residual standard error: 2.35 on 58 degrees of freedom
+# Multiple R-squared:  0.03272,	Adjusted R-squared:  0.01605 
+# F-statistic: 1.962 on 1 and 58 DF,  p-value: 0.1666
+
 plot(erro_sent~porc_sents,
   ylab = "Erro",
   xlab = "Porcentagem de palavras encontradas pelo Dicionário Sentis",
@@ -187,6 +205,27 @@ reg_sents = lm(erro_sent~porc_sents)
 # (Intercept)   porc_sents  
 #     1.137       26.358
 abline(reg_sents)
+
+summary(reg_sents)
+
+# Call:
+# lm(formula = erro_sent ~ porc_sents)
+
+# Residuals:
+#     Min      1Q  Median      3Q     Max 
+# -2.5031 -1.5257 -0.8506  0.9274 11.2897 
+# 
+# Coefficients:
+#             Estimate Std. Error t value Pr(>|t|)  
+# (Intercept)   1.1369     0.5669   2.006   0.0496 *
+# porc_sents   26.3580    18.1509   1.452   0.1518  
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Residual standard error: 2.422 on 58 degrees of freedom
+# Multiple R-squared:  0.03508,	Adjusted R-squared:  0.01845 
+# F-statistic: 2.109 on 1 and 58 DF,  p-value: 0.1518
+
 ```
 
 # Boxplot referente aos dicionários léxicos
