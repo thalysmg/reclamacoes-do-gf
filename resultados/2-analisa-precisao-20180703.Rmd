@@ -53,6 +53,47 @@ reclamacoes_l = reclamacoes_l %>%
     mutate(erro = (insatisfacao - polaridade_normalizada)**2)
 ```
 
+# Erros médios por léxico
+
+```{r}
+# Calculando através da função de média, o erro médio encontrado pelo léxico Op30 = 2.124537
+erro_medio_op30 = mean(reclamacoesLexicoOp30$Erro)
+# Calculando através da função de média, o erro médio encontrado pelo léxico Sent = 1.823611
+erro_medio_sent = mean(reclamacoesLexicoSent$Erro)
+```
+
+# Vendo o comportamento do erro através do histograma do SSE
+
+```{r}
+# Histograma referente ao Op30
+hist(reclamacoesLexicoOp30$Erro,
+     col = "red",
+     nclass = 12,
+     main = "Distribuição do erro referente a polaridade
+     normalizada de Op30 e Insatisfação",
+     xlab = "Valor do erro",
+     ylab = "Frequência"
+)
+
+# Histograma referente ao Sentins
+hist(reclamacoesLexicoSent$Erro,
+     nclass = 12,
+     col = "darkblue",
+     main = "Distribuição do erro referente a polaridade 
+     normalizada de Sentis e Insatisfação",
+     xlab = "Valor do erro",
+     ylab = "Frequência"
+)
+
+```
+
+# Calculando a mediana da avaliação humana
+
+```{r}
+# Mediana da avaliação humana = 2.5
+mediana_aval_humana = median(reclamacoes$insatisfacao)
+```
+
 # Criando uma tabela auxiliar com os erros em cada reclamação, filtrando por léxico
 
 ```{r}
@@ -94,8 +135,7 @@ erro_medio_op30 = sum(reclamacoesLexicoOp30$Erro) / length(reclamacoesLexicoOp30
 erro_medio_sent = sum(reclamacoesLexicoSent$Erro) / length(reclamacoesLexicoSent$Erro)
 ```
 
-# Verificando a correlação entre "a porcentagem de palavras encontradas em cada reclamação
-# pelos dicionários" e "o erro por reclamação". 
+# Verificando a correlação entre "o erro por reclamação" e "a porcentagem de palavras encontradas em cada reclamação pelos dicionários". 
 
 ```{r}
 # Tabela de reclamações ordenada por ID, para facilitar filtragem
@@ -104,15 +144,49 @@ tab_aux = tab_aux[order(tab_aux$id),]
 
 porc_op30 = tab_aux$palavras_op30 / tab_aux$palavras
 porc_sents = tab_aux$palavras_sent / tab_aux$palavras
+
+erro_op30 = reclamacoesLexicoOp30$Erro
+erro_sent = reclamacoesLexicoSent$Erro
+
 ```
 
-# Calculando a correlação
+# Calculando a correlação e construindo os gráficos
 
 ```{r}
 # Correlação da porcentagem de palavras encontradas pelo 0p30 e o erro = 0.1808979
-cor_erro_op30 = cor(porc_op30, reclamacoesLexicoOp30$Erro)
+cor_erro_op30 = cor(porc_op30, erro_op30)
 # Correlação da porcentagem de palavras encontradas pelo Sentis e o erro = 0.1873026
-cor_erro_sents = cor(porc_sents, reclamacoesLexicoSent$Erro)
+cor_erro_sents = cor(porc_sents, erro_sent)
+
+plot(erro_op30~porc_op30,
+  ylab = "Erro",
+  xlab = "Porcentagem de palavras encontradas pelo Dicionário Op30",
+  pch = 20
+)
+reg_op30 = lm(erro_op30~porc_op30)
+# Saída da linha de cima
+# Call:
+# lm(formula = erro_op30 ~ porc_op30)
+#
+# Coefficients:
+# (Intercept)    porc_op30  
+#     0.9936       9.5684
+abline(reg_op30)
+
+plot(erro_sent~porc_sents,
+  ylab = "Erro",
+  xlab = "Porcentagem de palavras encontradas pelo Dicionário Sentis",
+  pch = 20
+)
+reg_sents = lm(erro_sent~porc_sents)
+# Saída da linha de ccima
+# Call:
+# lm(formula = erro_sent ~ porc_sents)
+#
+# Coefficients:
+# (Intercept)   porc_sents  
+#     1.137       26.358
+abline(reg_sents)
 ```
 
 # Boxplot referente aos dicionários léxicos
@@ -128,7 +202,7 @@ boxplot(reclamacoes$insatisfacao,
 
 boxplot(reclamacoesLexicoSent$Polaridade_Normalizada,
         reclamacoesLexicoOp30$Polaridade_Normalizada,
-  main = "Boxplot referente aos Dicionário Léxicos",
+  main = "Boxplot referente aos Dicionários Léxicos",
   xlab = "Polaridade normalizada",
   names = c("Sent","Op30"),
   col = c("orange","red"),
