@@ -62,6 +62,15 @@ erro_medio_op30 = mean(reclamacoesLexicoOp30$Erro)
 erro_medio_sent = mean(reclamacoesLexicoSent$Erro)
 ```
 
+# Soma dos erros por léxico
+
+```{r}
+# 127.4722
+soma_erros_op30 = sum(reclamacoesLexicoOp30$Erro)
+# 109.4167
+soma_erros_sent = sum(reclamacoesLexicoSent$Erro)
+```
+
 # Vendo o comportamento do erro através do histograma do SSE
 
 ```{r}
